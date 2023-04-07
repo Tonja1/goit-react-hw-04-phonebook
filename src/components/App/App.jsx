@@ -1,82 +1,58 @@
 import { ContactForm } from "components/ContactForm/ContactForm";
 import { ContactList } from "components/ContactList/ContactList";
 import { nanoid } from "nanoid";
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import { Title, Div, Container } from './AppStyled';
 import { Filter } from "components/Filter/Filter";
 
-export class App extends Component {
-    state = {
-        contacts: [
-            { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-            { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-            { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-            { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-        ],
-        filter: '',
-  };
-  
-  componentDidMount() {
-    const contacts = localStorage.getItem('contacts');
-    const parsedContacts = JSON.parse(contacts);
-    if (parsedContacts) {
-      this.setState({ contacts: parsedContacts });
-    }
-  }
-  
-  componentDidUpdate(prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
+export const App =() => {
+    const [contacts, setContacts] = useState(() => {
+        return JSON.parse(localStorage.getItem('contacts')) ?? [];
+    });
 
-    onDelete = contactId => {
-        this.setState(prevState => ({
-            contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-        }));
+    const [filter, setFilter] = useState('');
+
+    useEffect(() => {
+        window.localStorage.setItem('contacts', JSON.stringify(contacts));
+    }, [contacts]);
+    
+    const onDelete = contactId => {
+        setContacts(contacts.filter(({ id }) => id !== contactId));
     };
 
-    addContact = event => {
+    const addContact = event => {
         event.preventDefault();
         const name = event.currentTarget.elements.name.value;
         const number = event.currentTarget.elements.number.value;
         const normalizedName = name.toLowerCase();
         const contact = {
             id: nanoid(),
-            name: name,
-            number: number,
+            name,
+            number,
         };
 
-        if
-            (this.state.contacts.find(
-            contact => contact.name.toLowerCase() === normalizedName
-        )
-        ) {
+    if (
+        contacts.find(contact => contact.name.toLowerCase() === normalizedName)
+    ){
             return alert(`${name} is already in contacts!`);
         }
-        this.setState(({ contacts }) => ({
-            contacts: [...contacts, contact],
-        }));
-
+    setContacts(prevContacts => [contact, ...prevContacts]);
+        
         event.currentTarget.reset();
     };
 
-    filterContacts = event => {
-        this.setState({ filter: event.currentTarget.value });
+    const filterContacts = event => {
+        setFilter(event.currentTarget.value);
     };
 
-    getFilteredContacts = () => {
-        const { filter, contacts } = this.state;
+    const getFilteredContacts = () => {
         const normalizedFilter = filter.toLowerCase();
-        return contacts.filter(contact =>
-            contact.name.toLowerCase().includes(normalizedFilter)
+        return contacts.filter(({name}) =>
+            name.toLowerCase().includes(normalizedFilter)
         );
     };
 
-    render() {
-        
-        const { addContact, filterContacts, state, onDelete } = this;
-        return (
+    return (
             <Container>
                 <Div>
                     <Title>Phonebook</Title>
@@ -85,12 +61,9 @@ export class App extends Component {
                 </Div>
                 <Div>
                     <Title>Contacts</Title>
-                    <Filter value={state.filter} onChange={filterContacts} />
-                    <ContactList
-                        onClick={onDelete}
-                        contacts={this.getFilteredContacts()} />
+                    <Filter value={filter} onChange={filterContacts} />
+                    <ContactList onClick={onDelete} contacts={getFilteredContacts()} />
                 </Div>
             </Container>
         );
-    }
-}
+    };

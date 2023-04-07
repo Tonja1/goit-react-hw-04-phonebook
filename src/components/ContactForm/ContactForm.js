@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-
 import { Form, Input, Label, Button } from './ContactFormStyled';
 
 export const ContactForm = ({ addContact }) => {
